@@ -32,20 +32,14 @@ static void croutAlphaSolve(const int ROW, const int COL, const int DIM,
   return;
 }
 
-void decompLU(const int DIM, double const * const A, double * const LU) {
+void decompLU(const int DIM, double * const A, double * const LU) {
   int i, j;
 
-  // check that we're not being asked to overwrite A
+  // If input and output array pointers are different initialise output
   // have to trust that A and LU don't overlap...
-  if (LU == A) {
-    printf("Error: LU and A are the same memory address, this implementation "
-           "cannot overwrite A. Please allocate new memory for the LU matrix.\n"
-         );
-    exit(1);
+  if (LU != A) {
+    memcpy(LU, A, DIM * DIM * sizeof(double));
   }
-
-  // initialise LU from A
-  memcpy(LU, A, DIM * DIM * sizeof(double));
 
   // main LU iterations
   // Crout's algorithm [see Numerical Recipes (3E), Press, Teukolsky,
