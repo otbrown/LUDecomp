@@ -8,12 +8,31 @@ static inline int lindex(const int ROW, const int COL, const int DIM) {
 }
 
 static void croutBetaSolve(const int ROW, const int COL, const int DIM,
-                           double * const LU) {return;}
+                           double * const LU) {
+  double sum = 0.0;
+  for (int k = 0; k < ROW; ++k) {
+    sum += LU[lindex(ROW,k,DIM)] * LU[lindex(k,COL,DIM)];
+  }
+
+  LU[lindex(ROW,COL,DIM)] -= sum;
+
+  return;
+}
+
 static void croutAlphaSolve(const int ROW, const int COL, const int DIM,
-                            double * const LU) {return;}
+                            double * const LU) {
+  double sum = 0.0;
+  for (int k = 0; k < COL; ++k) {
+    sum += LU[lindex(ROW,k,DIM)] * LU[lindex(k,COL,DIM)];
+  }
+
+  LU[lindex(ROW,COL,DIM)] -= sum;
+  LU[lindex(ROW,COL,DIM)] /= LU[lindex(COL,COL,DIM)];
+
+  return;
+}
 
 void decompLU(const int DIM, double const * const A, double * const LU) {
-  const int NUMEL = DIM * DIM;
   int i, j;
 
   // check that we're not being asked to overwrite A
@@ -28,8 +47,17 @@ void decompLU(const int DIM, double const * const A, double * const LU) {
   // initialise LU from A
   memcpy(LU, A, DIM * DIM * sizeof(double));
 
-  // set diagonal elements to 1
-  for (i = 0; i < NUMEL; i += DIM+1) LU[i] = 1.0;
+  // main LU iterations
+  // Crout's algorithm [see Numerical Recipes (3E), Press, Teukolsky,
+  // Vetterling, and Flannery, (2007), Chapter 2.3.1, or Wikipedia]
+  for (j = 0; j < DIM; ++j) {
+    for (i = 0; i < j+1; ++i) {
+      croutBetaSolve(i, j, DIM, LU);
+    }
+    for (i = j+1; i < DIM; ++i) {
+      croutAlphaSolve(i, j, DIM, LU);
+    }
+  }
 
   return;
 }
